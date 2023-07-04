@@ -3,7 +3,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-
+using DragAndDrop.Behaviors;
 using DragAndDrop.Utils;
 using DragAndDrop.ViewModels;
 
@@ -15,8 +15,6 @@ namespace DragAndDrop
     /// </summary>
     public partial class MainWindow : Window
     {
-        private ListBox sourceBox;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -37,16 +35,26 @@ namespace DragAndDrop
             if (fe == null) 
                 return;
 
-            sourceBox = ((FrameworkElement)sender).FindVisualAncestor<ListBox>();
-            if (sourceBox == null)
+            // If dragable is null, this can't be dragged
+            IDragable dragable = fe.DataContext as IDragable;
+            if (dragable == null)
                 return;
+
+
+            IDropable source = fe.FindVisualAncestor<ListBox>()?.DataContext as IDropable;
+            if (source == null)
+                return;
+
+            // Set the source on the dragable object so we don't have to 
+            // save a reference in an arbitrary location
+            dragable.Source = source;
 
             // Package the data.
             DataObject data = new DataObject();
-            data.SetData(fe.DataContext.GetType(), fe.DataContext);
+            data.SetData(typeof(IDragable), dragable);
 
             // Initiate the drag-and-drop operation.
-            DragDrop.DoDragDrop(sourceBox, data, DragDropEffects.Move);
+            DragDrop.DoDragDrop(fe, data, DragDropEffects.Move);
         }
 
         
@@ -60,24 +68,20 @@ namespace DragAndDrop
                 return;
 
             // Grab a reference to the targetCollection
-            ItemCollectionViewModel targetCollection = frameworkElement.DataContext as ItemCollectionViewModel;
-            if (targetCollection == null) 
+            IDropable targetDropable = frameworkElement.DataContext as IDropable;
+            if (targetDropable == null) 
                 return;
 
             // Get the data from the DragDrop event
-            var item = e.Data.GetData(typeof(ItemViewModel)) as ItemViewModel;
-            if (item == null)
+            IDragable dragable = e.Data.GetData(typeof(IDragable)) as IDragable;
+            if (dragable == null)
                 return;
 
-            // Grab a reference to the source collection
-            // Compare the source collection to the target collection.
-            // If the same, we don't continue.
-            ItemCollectionViewModel sourceCollection = sourceBox.DataContext as ItemCollectionViewModel;
-            if (sourceCollection == null || sourceCollection == targetCollection)
+            if (dragable.Source == targetDropable)
                 return;
 
-            if (sourceCollection.Remove(item))
-                targetCollection.Add(item);
+            if (dragable.Source.Remove(dragable))
+                targetDropable.Add(dragable);
         }
     }
 }

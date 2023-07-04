@@ -1,27 +1,43 @@
-﻿using System.Collections;
+﻿using DragAndDrop.Behaviors;
+using System;
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Windows;
 
 namespace DragAndDrop.ViewModels
 {
-    internal class ItemCollectionViewModel
+    internal class ItemCollectionViewModel : ViewModelBase, IDropable
     {
         public ObservableCollection<ItemViewModel> Items { get; set; } =
             new ObservableCollection<ItemViewModel>();
 
 
-        public void Add(ItemViewModel itemViewModel)
+        public bool Add(object item)
         {
-            if (Items.Contains(itemViewModel)) return;
-            Items.Add(itemViewModel);
+            if (item is ItemViewModel itemViewModel)
+            {
+
+                if (Items.Contains(itemViewModel))
+                    return false;
+
+                Items.Add(itemViewModel);
+                return true;
+            }
+
+            return false;
         }
 
-        public bool Remove(ItemViewModel itemViewModel)
+        public bool Remove(object item)
         {
-            if (!Items.Contains(itemViewModel))
-                return false;
+            if (item is ItemViewModel itemViewModel)
+            {
+                if (!Items.Contains(itemViewModel))
+                    return false;
 
-            return Items.Remove(itemViewModel);
+                return Items.Remove(itemViewModel);
+            }
+
+            return false;
         }
     }
 }

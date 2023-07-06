@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DragAndDrop"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:b="clr-namespace:DragAndDrop.Behaviors"
         xmlns:viewModels="clr-namespace:DragAndDrop.ViewModels"
         mc:Ignorable="d"
         Title="MainWindow" 
@@ -18,9 +19,11 @@
     
     <Window.Resources>
         <DataTemplate x:Key="itemViewModelTemplate">
-            <TextBlock 
-                Text="{Binding DisplayName}"
-                MouseMove="TextBlock_MouseMove"/>
+            <TextBlock Text="{Binding DisplayName}">
+             <i:Interaction.Behaviors>
+                 <b:FrameworkElementDragBehavior />
+             </i:Interaction.Behaviors>
+            </TextBlock>
         </DataTemplate>
     </Window.Resources>
     
@@ -44,7 +47,7 @@
             Grid.Row="0"
             Grid.Column="0"
             VerticalAlignment="Bottom"/>
-        
+
         <ListBox
             DataContext="{Binding ColumnA}"
             ItemsSource="{Binding Items}"
@@ -52,9 +55,13 @@
             Grid.Row="1"
             Grid.Column="0"
             x:Name="lb1"
-            VerticalAlignment="Stretch"
-            AllowDrop="True"
-            Drop="ListBox_Drop"/>
+            VerticalAlignment="Stretch">
+
+            <i:Interaction.Behaviors>
+                <b:FrameworkElementDropBehavior/>
+            </i:Interaction.Behaviors>
+            
+        </ListBox>
 
         <TextBlock
             Text="Column B" 
@@ -70,10 +77,11 @@
             Grid.Row="1"
             Grid.Column="2"
             x:Name="lb2"
-            VerticalAlignment="Stretch"
-            AllowDrop="True"
-            Drop="ListBox_Drop"/>
-
+            VerticalAlignment="Stretch">
+            <i:Interaction.Behaviors>
+                <b:FrameworkElementDropBehavior/>
+            </i:Interaction.Behaviors>
+        </ListBox>
 
         <Button
             x:Name="closeButton"

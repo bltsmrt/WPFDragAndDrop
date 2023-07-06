@@ -11,7 +11,6 @@ namespace DragAndDrop.ViewModels
         public ObservableCollection<ItemViewModel> Items { get; set; } =
             new ObservableCollection<ItemViewModel>();
 
-
         public bool Add(object item)
         {
             if (item is ItemViewModel itemViewModel)

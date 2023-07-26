@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Windows.Input;
 using System.Windows;
+using System.Linq;
 using System.Windows.Controls;
 using System.Runtime.InteropServices;
 using System.Windows.Controls.Primitives;
-using System.Collections.Generic;
+using System.Collections;
 using Microsoft.Xaml.Behaviors;
 using QueryContinueDragEventArgs = System.Windows.QueryContinueDragEventArgs;
 
@@ -18,10 +19,11 @@ namespace DragAndDrop.Behaviors
         private Selector parent;
         private IDropable parentSource;
 
-
+  
         protected override void OnAttached()
         {
             base.OnAttached();
+
             this.AssociatedObject.MouseLeftButtonDown +=
                  new MouseButtonEventHandler(AssociatedObject_MouseLeftButtonDown);
             this.AssociatedObject.MouseLeftButtonUp +=
@@ -42,6 +44,14 @@ namespace DragAndDrop.Behaviors
         {
             isMouseClicked = true;
 
+
+            //Multi select will require that this object handle mouse - down events completely.
+            if (parent.SelectedItem == this.AssociatedObject.DataContext ||
+                (parent is ListBox lb &&
+                  lb.SelectedItems.Contains(this.AssociatedObject.DataContext)))
+            {
+                e.Handled = true;
+            }
         }
 
         void AssociatedObject_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -57,20 +67,58 @@ namespace DragAndDrop.Behaviors
 
             // Set the item's DataContext as the data to be transferred
             IDragable dragObject = this.AssociatedObject.DataContext as IDragable;
-            dragObject.Source = parentSource;
-
             if (dragObject == null)
                 return;
+
+            if (parent is ListBox listBox && 
+                listBox.SelectedItems.Count > 1)
+            {
+                HandleMultiObjectDrag(dragObject, listBox);
+            }
+            else
+            {
+                HandleSingleObjectDrag(dragObject);
+            }
+
+            isMouseClicked = false;
+        }
+
+
+        void HandleSingleObjectDrag(IDragable dragObject)
+        {
+            // Set the source object on the item being dragged.
+            dragObject.Source = parentSource;
 
             // Set the DataObject
             DataObject data = new DataObject();
             data.SetData(typeof(IDragable), dragObject);
 
+            // System.Windows implementation
+            DragDrop.DoDragDrop(this.AssociatedObject, data, DragDropEffects.Move);
+        }
+
+
+        // NOTE:
+        // This code does assume that the items contained in the ListBox
+        // Are all of the same type.
+        void HandleMultiObjectDrag(IDragable dragObject, ListBox listBox)
+        {
+            // Grab a reference to ALL of the selected items.
+            var dataObjects = listBox.SelectedItems;
+
+            // Set the parent source on all objects in the set.
+            foreach (var obj in dataObjects)
+                if (obj is IDragable dragable)
+                    dragable.Source = this.parentSource;
+
+            // Set the DataObject
+            DataObject data = new DataObject();
+            data.SetData(typeof(IEnumerable), dataObjects);
 
             // System.Windows implementation
             DragDrop.DoDragDrop(this.AssociatedObject, data, DragDropEffects.Move);
-
-            isMouseClicked = false;
         }
+
+
     }
 }

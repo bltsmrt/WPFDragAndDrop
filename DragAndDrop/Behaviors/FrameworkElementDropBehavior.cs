@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Windows;
 using Microsoft.Xaml.Behaviors;
 
 
@@ -28,14 +30,61 @@ namespace DragAndDrop.Behaviors
                 return;
 
             IDragable dragable = e.Data.GetData(typeof(IDragable)) as IDragable;
+            if (dragable != null)
+            {
+                HandleSingleObjectDrop(dragable);
+                return;
+            }
 
+            // Check for IEnumerable data
+            else
+            {
+                IEnumerable list = e.Data.GetData(typeof(IEnumerable)) as IEnumerable;
+                if (list == null)
+                    return;
+
+                HandleMultiObjectDrop(list);
+            }
+        }
+        void HandleSingleObjectDrop(IDragable dragable)
+        {
             if (dragable == null || dataContextAsDropable == dragable.Source)
                 return;
 
             if (dataContextAsDropable.Add(dragable))
                 dragable.Source.Remove(dragable);
-            
         }
+
+        void HandleMultiObjectDrop(IEnumerable list)
+        {
+            // We need to maintain a temporary reference to each item;
+            // If we try to execute the Remove() action inside a single for loop,
+            // We'll get an exception due to modifying the IEnumerable
+            // we're attempting to iterate through.
+
+            List<IDragable> itemsToRemoveFromSource = new List<IDragable>();
+
+            foreach (object item in list)
+            {
+                if (item is IDragable dragableItem)
+                {
+                    dataContextAsDropable.Add(dragableItem);
+                    itemsToRemoveFromSource.Add(dragableItem);
+                }
+            }
+
+            foreach (IDragable dragableItem in itemsToRemoveFromSource)
+            {
+                dragableItem.Source.Remove(dragableItem);
+            }
+        }
+
+
+
+
+
+
+
 
 
         void AssociatedObject_DragLeave(object sender, DragEventArgs e)
@@ -49,17 +98,52 @@ namespace DragAndDrop.Behaviors
         {
             e.Handled = true;
             e.Effects = DragDropEffects.None;
+
+            IDropable source = null;
             IDropable target = this.AssociatedObject.DataContext as IDropable;
 
+            // Verify eligability
+            bool canBeDropped = e.Data.GetDataPresent(typeof(IDragable));
 
-            //if item can be dropped
-            if (e.Data.GetDataPresent(typeof(IDragable)) == false)
+
+            // If Single Object
+            if (canBeDropped)
+            {
+                IDragable data = e.Data.GetData(typeof(IDragable)) as IDragable;
+                source = data.Source;
+            }
+
+            // Check for multi-object
+            else
+            {
+                if (e.Data.GetDataPresent(typeof(IEnumerable)))
+                {
+                    IEnumerable listData = e.Data.GetData(typeof(IEnumerable)) as IEnumerable;
+                    foreach (object item in listData)
+                    {
+                        if (item is IDragable dragableItem)
+                        {
+                            canBeDropped = true;
+                            source = dragableItem.Source;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (canBeDropped == false)
                 return;
 
-            var data = e.Data.GetData(typeof(IDragable));
-            if (data is IDragable dragable && dragable.Source != target)
-                e.Effects = DragDropEffects.Move;
+            // Test to make sure we're not dropping back into the original list
+            if (source == target)
+                return;
+
+            e.Effects = DragDropEffects.Move;
         }
+
+
+
+
 
 
 

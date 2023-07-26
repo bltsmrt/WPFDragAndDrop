@@ -12,6 +12,10 @@ namespace DragAndDrop.ViewModels
         public ItemCollectionViewModel ColumnA { get; set; }
         public ItemCollectionViewModel ColumnB { get; set; }
 
+
+
+
+
         public ViewModel()
         {
             this.ColumnA = new ItemCollectionViewModel();

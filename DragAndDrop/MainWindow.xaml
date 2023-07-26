@@ -18,12 +18,14 @@
     </Window.DataContext>
     
     <Window.Resources>
+
         <DataTemplate x:Key="itemViewModelTemplate">
-            <TextBlock Text="{Binding DisplayName}">
-             <i:Interaction.Behaviors>
-                 <b:FrameworkElementDragBehavior />
-             </i:Interaction.Behaviors>
-            </TextBlock>
+            <Grid>
+                <TextBlock Text="{Binding DisplayName}"/>
+                <i:Interaction.Behaviors>
+                    <b:FrameworkElementDragBehavior/>
+                </i:Interaction.Behaviors>
+            </Grid>
         </DataTemplate>
     </Window.Resources>
     
@@ -52,10 +54,12 @@
             DataContext="{Binding ColumnA}"
             ItemsSource="{Binding Items}"
             ItemTemplate="{StaticResource itemViewModelTemplate}"
+            SelectionMode="Extended"
             Grid.Row="1"
             Grid.Column="0"
             x:Name="lb1"
-            VerticalAlignment="Stretch">
+            VerticalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch">
 
             <i:Interaction.Behaviors>
                 <b:FrameworkElementDropBehavior/>
@@ -74,10 +78,12 @@
             DataContext="{Binding ColumnB}"
             ItemsSource="{Binding Items}"
             ItemTemplate="{StaticResource itemViewModelTemplate}"
+            SelectionMode="Extended"
             Grid.Row="1"
             Grid.Column="2"
             x:Name="lb2"
-            VerticalAlignment="Stretch">
+            VerticalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch">
             <i:Interaction.Behaviors>
                 <b:FrameworkElementDropBehavior/>
             </i:Interaction.Behaviors>
@@ -85,13 +91,13 @@
 
         <Button
             x:Name="closeButton"
+            Click="closeButton_Click"
             Grid.Column="2"
             Grid.Row="2"
             Width="60"
             Height="20"
             Content="Close"
-            HorizontalAlignment="Right"
-            Command="Close"/>
+            HorizontalAlignment="Right"/>
 
     </Grid>
 </Window>
